@@ -1,0 +1,3 @@
+food2vec
+numpy
+pandas
