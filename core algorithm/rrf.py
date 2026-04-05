@@ -1,17 +1,30 @@
-def RRF(list1: list[str], list2: list[str], k: int) -> list[str]:
+def RRF(list1: list[dict], list2: list[dict], k: int = 60) -> list[dict]:
     scores = {}
+    records = {}
 
     for i, doc in enumerate(list1):
-        scores[doc] = scores.get(doc, 0) + (1 / (k + (i+1)))
+        rid = doc["recipe_id"]
+        scores[rid] = scores.get(rid, 0) + (1 / (k + (i + 1)))
+        records[rid] = doc
+
     for i, doc in enumerate(list2):
-        scores[doc] = scores.get(doc, 0) + (1 / (k + (i+1)))
-    
-    return sorted(scores, key=lambda d: scores[d], reverse=True)
-                                        
+        rid = doc["recipe_id"]
+        scores[rid] = scores.get(rid, 0) + (1 / (k + (i + 1)))
+        if rid not in records:
+            records[rid] = doc
+
+    ranked_ids = sorted(scores, key=lambda rid: scores[rid], reverse=True)
+
+    results = []
+    for rank, rid in enumerate(ranked_ids, start=1):
+        entry = dict(records[rid])
+        entry["rank"] = rank
+        entry["rrf_score"] = scores[rid]
+        results.append(entry)
+
+    return results
 
 
-list1 = ["A", "B", "C", "D", "E"]
-list2 = ["B", "A", "E", "D", "C"]
 
-print(RRF(list1, list2, 60))
+
 
