@@ -2,7 +2,8 @@
 
 ## Environment Setup
 Create a Python virtual environment through `python -m venv venv`, then activate the environment through `source venv/bin/activate` if on macOS or Linux (or `venv\Scripts\activate` if on Windows).  
-After activating your Python environment, run `pip install -r requirements.txt`. This will install all the relevant dependencies used in this project such as `food2vec` for Vector Search's embeddings and `rank_bm25` for BM25's processing.
+After activating your Python environment, run `pip install -r requirements.txt`. This will install all the relevant dependencies used in this project such as `food2vec` for Vector Search's embeddings and `rank_bm25` for BM25's processing.  
+Make sure to download this Kaggle [Recipe Dataset](https://www.kaggle.com/datasets/wilmerarltstrmberg/recipe-dataset-over-2m/data) by Wilmer Arlt Strömberg.
 
 ## Project Description
 MagniFood is a ingredient-recipe matching project. It uses Okapi BM25 and Vector Search to rank ingredients, then processes those ranks through RRF (Reciprocal Rank Fusion) to produce proper search results.
