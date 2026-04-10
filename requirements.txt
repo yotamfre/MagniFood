@@ -2,3 +2,4 @@ food2vec
 numpy
 pandas
 rank_bm25
+django
