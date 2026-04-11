@@ -1,0 +1,77 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MagniFood</title>
+    <link rel="stylesheet" href="{% static 'Main/home.css' %}">
+</head>
+<body>
+    <main class="page-shell">
+        <section class="hero">
+            <span class="eyebrow">MagniFood recipe search</span>
+            <h1>Recipe search from ingredients.</h1>
+            <p class="lead">Add ingredients, submit, and review matching recipes below.</p>
+        </section>
+
+        <section class="card composer">
+            <form id="ingredient-form" method="post">
+                {% csrf_token %}
+                <label class="field-label" for="ingredient-input">Ingredients</label>
+                <div class="input-row">
+                    <input id="ingredient-input" type="text" placeholder="e.g. chicken breast" autocomplete="off">
+                    <button id="add-ingredient" class="btn btn-add" type="button">Add</button>
+                </div>
+                <p class="helper">Press Enter or click Add to create a chip. Use the x on each chip to remove it.</p>
+
+                <input id="ingredients-json" type="hidden" name="ingredients_json" value="[]">
+
+                <div id="chip-list" class="chip-list" aria-live="polite">
+                    {% for ingredient in submitted_ingredients %}
+                        <div class="chip" data-ingredient="{{ ingredient|escape }}">
+                            <span>{{ ingredient }}</span>
+                            <button type="button" aria-label="Remove {{ ingredient }}">x</button>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <button class="btn btn-submit" type="submit">Submit</button>
+            </form>
+        </section>
+
+        {% if show_results %}
+        <section class="layout layout-centered">
+            <article class="card results results-centered">
+                <h2 class="section-title">Recipe results</h2>
+                <div id="recipe-results" class="results-wrap is-visible">
+                    {% comment %}
+                    TODO: Replace this loop with the recipes returned by your query logic.
+                    Each recipe object should provide:
+                    - image
+                    - name
+                    - link
+                    Populate recipe_results in Main/views.py after your query runs.
+                    {% endcomment %}
+                    {% if recipe_results %}
+                        {% for recipe in recipe_results %}
+                            <div class="recipe-card">
+                                <img src="{{ recipe.image }}" alt="{{ recipe.name }}">
+                                <div class="recipe-meta">
+                                    <h3>{{ recipe.name }}</h3>
+                                    <a href="{{ recipe.link }}" target="_blank" rel="noreferrer">Open recipe</a>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="empty-state">Submit ingredients to reveal this scrollable results panel. Your query output should be assigned to recipe_results in the view.</p>
+                    {% endif %}
+                                </div>
+            </article>
+        </section>
+        {% endif %}
+    </main>
+
+    <script src="{% static 'Main/home.js' %}"></script>
+</body>
+</html>
