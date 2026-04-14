@@ -1,8 +1,9 @@
 from rank_bm25 import BM25Okapi
+import pandas as pd
 import numpy as np
 import time
-import json
 import re
+import ast
 
 def normalize_text(text):
     text = text.lower() # lowercase
@@ -10,16 +11,37 @@ def normalize_text(text):
     text = re.sub(r"\s+", " ", text) # remove trailing whitespaces
     return text
 
+def normalize_ner_list(ner_list): # normalize an ner list
+    normed = []
+    for ner in ner_list:
+        ner = ner.strip()
+        if ner: # if can get words
+            normed.append(normalize_text(ner)) # append it
+    return normed
+
 def load_bm25_data(path, limit = None):
+    df = pd.read_csv(path)
+    if limit is not None:
+        df = df.iloc[:limit]
+
     records = []
-    with open(path, "r", encoding="utf-8") as bm25_f:
-        for idx, recipe in enumerate(bm25_f):
-            if limit is not None and idx >= limit: # limit in case of overwhelming data length
-                break
-            recipe = recipe.strip()
-            if not recipe:
-                continue
-            records.append(json.loads(recipe)) # json to dict
+    for _, row in df.iterrows():
+        try:
+            ner_list = ast.literal_eval(row["NER"])
+        except Exception:
+            ner_list = []
+
+        ner_norm = normalize_ner_list(ner_list)
+        tokens = " ".join(ner_norm).split()
+        records.append({                
+            "title": row.get("title", ""),
+            "ingredients": row.get("ingredients", ""),
+            "directions": row.get("directions", ""),
+            "link": row.get("link", ""),
+            "source": row.get("source", ""),
+            "tokens": tokens        
+        })
+
     return records
 
 def run_bm25(query, bm25, records, k):
@@ -44,23 +66,18 @@ def run_bm25(query, bm25, records, k):
     
     return results # top k results
 
-# build once for convenience
-# records = load_bm25_data("data/BM25_data.jsonl", limit = 500000)
-# corpus = [record["tokens"] for record in records]
-# bm25 = BM25Okapi(corpus)
-
 if __name__ == "__main__":
     # build once for convenience
-    print("loading data")
+    print("loading data") # debug
     t0 = time.time()
-    records = load_bm25_data("data/BM25_data.jsonl", limit = 500000)
-    print(f"loaded {len(records)} records in {time.time() - t0:.2f} sec")
+    records = load_bm25_data("data/recipes_data.csv", limit = 500000)
+    print(f"loaded {len(records)} records in {time.time() - t0:.2f} sec") # debug
     t1 = time.time()
     corpus = [record["tokens"] for record in records]
-    print(f"corpus built in {time.time() - t1:.2f} sec")
+    print(f"corpus built in {time.time() - t1:.2f} sec") # debug
     t2 = time.time()
     bm25 = BM25Okapi(corpus)
-    print(f"bm25 built in {time.time() - t2:.2f} sec\n")
+    print(f"bm25 built in {time.time() - t2:.2f} sec\n") # debug
 
     # testing different queries
     query = "brown sugar vanilla milk"
