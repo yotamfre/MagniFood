@@ -7,6 +7,12 @@ import sys
 def main():
     """Run administrative tasks."""
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "MagniFood.settings")
+
+    if len(sys.argv) == 2 and sys.argv[1] == "runserver":
+        port = os.getenv("PORT")
+        if port:
+            sys.argv.append(f"0.0.0.0:{port}")
+
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:

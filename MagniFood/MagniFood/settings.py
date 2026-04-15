@@ -26,12 +26,12 @@ SECRET_KEY = "django-insecure-!4-0y2udk#xema((x3^(5e3wy_x55nmxs5(5k=85xx@+1eqle-
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+default_allowed_hosts = "localhost,127.0.0.1,magnifood.onrender.com,.onrender.com"
+allowed_hosts_value = os.getenv("ALLOWED_HOSTS") or default_allowed_hosts
+
 ALLOWED_HOSTS = [
     host.strip()
-    for host in os.getenv(
-        "ALLOWED_HOSTS",
-        "localhost,127.0.0.1,magnifood.onrender.com,.onrender.com",
-    ).split(",")
+    for host in allowed_hosts_value.split(",")
     if host.strip()
 ]
 
