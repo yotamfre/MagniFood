@@ -35,6 +35,16 @@ ALLOWED_HOSTS = [
     if host.strip()
 ]
 
+# CSRF trusted origins for secure cross-origin requests
+default_csrf_origins = "https://magnifood.onrender.com,https://*.onrender.com"
+csrf_origins_value = os.getenv("CSRF_TRUSTED_ORIGINS") or default_csrf_origins
+
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip()
+    for origin in csrf_origins_value.split(",")
+    if origin.strip()
+]
+
 
 # Application definition
 
