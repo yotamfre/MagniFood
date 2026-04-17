@@ -21,7 +21,9 @@ def normalize_ner_list(ner_list): # normalize an ner list
 
 def main():    
     df = pd.read_csv("data/recipes_data.csv")
-    # print("csv read") # debug
+    # print("csv read") # debug    
+    df = df.sample(frac=0.25, random_state=42).reset_index(drop=True)
+    # print("df 1/4 sampled")
     
     df["NER_norm"] = df["NER"].apply(ast.literal_eval).apply(normalize_ner_list) # normalize NER (turn NERs into list of strings)
     # print("NER normalized") # debug
