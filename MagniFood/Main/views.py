@@ -1,26 +1,35 @@
 import json
+import os
 
 from django.shortcuts import render
-from django.db.utils import ProgrammingError, OperationalError
+from django.db.models import Q
 
 from Main.BM25Search import BM25Search
-from Main.VectorSearch import rank_recipes_by_ingredients
-from Main.rrf import RRF
+from Main.models import Recipe
 
 # Create your views here.
-bm25 = None
 
 
-def get_bm25() -> BM25Search | None:
-    global bm25
-    needs_refresh = bm25 is None or not getattr(bm25, "records", None)
-    if needs_refresh:
-        try:
-            bm25 = BM25Search()
-        except (ProgrammingError, OperationalError):
-            # DB/table may not exist yet during migrations/deploy startup.
-            return None
-    return bm25 if getattr(bm25, "records", None) else None
+def hybrid_bm25_search(ingredients: list[str], k: int = 20):
+    terms = [str(ingredient).strip().lower() for ingredient in ingredients if str(ingredient).strip()]
+    if not terms:
+        return []
+
+    query = " ".join(terms)
+    candidate_limit = int(os.getenv("HYBRID_BM25_CANDIDATE_LIMIT", "5000"))
+
+    filters = Q()
+    for term in terms:
+        filters |= Q(title__icontains=term)
+        filters |= Q(ingredients__icontains=term)
+        filters |= Q(ner__icontains=term)
+
+    candidates = list(
+        Recipe.objects.filter(filters)
+        .values("id", "title", "ingredients", "directions", "link", "source", "tokens")[:candidate_limit]
+    )
+
+    return BM25Search.search_records_bm25(candidates, query, k=k)
 
 def home(request):
     submitted_ingredients = []
@@ -46,12 +55,17 @@ def home(request):
         # Replace this placeholder with the list of recipe dictionaries your
         # search logic returns.
         if submitted_ingredients:
-            query = " ".join(submitted_ingredients)
+            bm25_results = hybrid_bm25_search(submitted_ingredients, k=20)
 
-            bm25_engine = get_bm25()
-            bm25_results = bm25_engine.search_bm25(query, k=20) if bm25_engine else []
-            # vector_results = rank_recipes_by_ingredients(submitted_ingredients, k=20)
-            # recipe_results = RRF(bm25_results, vector_results)
+            # Optional hybrid reranking is disabled by default to keep memory usage low in production.
+            # Enable by setting ENABLE_VECTOR_RERANK=true.
+            if os.getenv("ENABLE_VECTOR_RERANK", "false").lower() == "true":
+                from Main.VectorSearch import rank_recipes_by_ingredients
+                from Main.rrf import RRF
+
+                vector_results = rank_recipes_by_ingredients(submitted_ingredients, k=20)
+                bm25_results = RRF(bm25_results, vector_results)
+
             recipe_results = [
                 {
                     "name": r["title"],
