@@ -299,4 +299,8 @@ h1 {
         width: 100%;
         height: 180px;
     }
+
+    .directions {
+        font-weight: normal;
+    }
 }

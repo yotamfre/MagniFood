@@ -59,12 +59,21 @@
                                 <img src="{{ recipe.image }}" alt="{{ recipe.name }}">
                                 <div class="recipe-meta">
                                     <h3>{{ recipe.name }}</h3>
-                                    <a href="{{ recipe.link }}" target="_blank" rel="noreferrer">Open recipe</a>
-                                </div>
+                                    <a href="{{ recipe.link }}" target="_blank" rel="noreferrer">Open Full Recipe</a>                                    
+                                    <br><br>
+                                    <div>Directions: </div>
+                                    <div class="directions">
+                                        <ul>
+                                            {% for step in recipe.directions %}
+                                                <li>{{ step }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>  
+                                </div>                                
                             </div>
                         {% endfor %}
                     {% else %}
-                        <p class="empty-state">Submit ingredients to reveal this scrollable results panel. Your query output should be assigned to recipe_results in the view.</p>
+                        <p class="empty-state">Submit ingredients to reveal this scrollable results panel. Your query output will be shown in this view.</p>
                     {% endif %}
                                 </div>
             </article>

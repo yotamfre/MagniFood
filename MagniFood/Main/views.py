@@ -7,6 +7,8 @@ from django.db.models import Q
 from Main.BM25Search import BM25Search
 from Main.models import Recipe
 
+import ast
+
 # Create your views here.
 
 
@@ -75,6 +77,7 @@ def home(request):
                 {
                     "name": r["title"],
                     "link": "//" + r["link"] if r["link"] and not r["link"].startswith("http") else r["link"],
+                    "directions": ast.literal_eval(r["directions"]) if isinstance(r["directions"], str) else r["directions"],
                     "image": "",
                 }
                 for r in bm25_results
