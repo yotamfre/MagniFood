@@ -5,8 +5,6 @@ from django.shortcuts import render
 from django.db.models import Q
 
 from Main.BM25Search import BM25Search
-from Main.VectorSearch import rank_recipes_by_ingredients
-from Main.rrf import RRF
 from Main.models import Recipe
 
 # Create your views here.
@@ -58,8 +56,16 @@ def home(request):
         # search logic returns.
         if submitted_ingredients:
             bm25_results = hybrid_bm25_search(submitted_ingredients, k=20)
-            # vector_results = rank_recipes_by_ingredients(submitted_ingredients, k=20)
-            # recipe_results = RRF(bm25_results, vector_results)
+
+            # Optional hybrid reranking is disabled by default to keep memory usage low in production.
+            # Enable by setting ENABLE_VECTOR_RERANK=true.
+            if os.getenv("ENABLE_VECTOR_RERANK", "false").lower() == "true":
+                from Main.VectorSearch import rank_recipes_by_ingredients
+                from Main.rrf import RRF
+
+                vector_results = rank_recipes_by_ingredients(submitted_ingredients, k=20)
+                bm25_results = RRF(bm25_results, vector_results)
+
             recipe_results = [
                 {
                     "name": r["title"],
