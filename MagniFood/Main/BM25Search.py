@@ -28,30 +28,58 @@ class BM25Search:
         self.corpus = [record["tokens"] for record in self.records]
         self.bm25 = BM25Okapi(self.corpus) if self.corpus else None
 
-    def search_bm25(self, query, k=20):
-        if not self.records or self.bm25 is None:
+    @staticmethod
+    def search_records_bm25(records, query, k=20):
+        if not records:
             return []
 
-        query = normalize_text(query) # normalize
-        query_tokens = query.split() # tokenize
-        query_scores = self.bm25.get_scores(query_tokens) # process with bm25
+        query = normalize_text(query)
+        query_tokens = query.split()
+        if not query_tokens:
+            return []
 
-        top_indices = np.argsort(query_scores)[-k:][::-1]
+        corpus = []
+        normalized_records = []
+        for rec in records:
+            tokens = rec.get("tokens")
+            if not isinstance(tokens, list):
+                tokens = []
+            tokens = [str(token).strip().lower() for token in tokens if str(token).strip()]
+            if not tokens:
+                # Fallback tokenization when tokens are missing for some rows.
+                tokens = normalize_text(str(rec.get("ingredients") or "")).split()
+            corpus.append(tokens)
+            normalized_records.append(rec)
+
+        if not corpus:
+            return []
+
+        bm25 = BM25Okapi(corpus)
+        query_scores = bm25.get_scores(query_tokens)
+
+        top_n = min(max(1, k), len(normalized_records))
+        top_indices = np.argsort(query_scores)[-top_n:][::-1]
 
         results = []
         for rank_num, i in enumerate(top_indices, start=1):
+            rec = normalized_records[i]
             results.append({
                 "rank": rank_num,
-                "recipe_id": i,  
-                "bm25_score": query_scores[i], 
-                "title": self.records[i]["title"], 
-                "ingredient_text": self.records[i]["ingredients"],
-                "directions": self.records[i]["directions"],
-                "link": self.records[i]["link"],
-                "source": self.records[i]["source"]
+                "recipe_id": rec.get("id"),
+                "bm25_score": float(query_scores[i]),
+                "title": rec.get("title", ""),
+                "ingredient_text": rec.get("ingredients", ""),
+                "directions": rec.get("directions", ""),
+                "link": rec.get("link", ""),
+                "source": rec.get("source", ""),
             })
-        
-        return results # top k results
+
+        return results
+
+    def search_bm25(self, query, k=20):
+        if not self.records or self.bm25 is None:
+            return []
+        return BM25Search.search_records_bm25(self.records, query, k=k)
 
 # if __name__ == "__main__":
 #     bm25_eng = BM25Search("data/BM25_data.jsonl", limit=1000000)
