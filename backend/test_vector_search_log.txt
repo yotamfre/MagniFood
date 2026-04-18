@@ -1,0 +1,66 @@
+test_load_vector_set_invalid_json_raises (__main__.TestVectorSearch.test_load_vector_set_invalid_json_raises) ... ok
+test_load_vector_set_missing_file_raises (__main__.TestVectorSearch.test_load_vector_set_missing_file_raises) ... ok
+test_normalize_ingredient_list (__main__.TestVectorSearch.test_normalize_ingredient_list) ... ok
+test_rank_recipes_invalid_inputs_raise (__main__.TestVectorSearch.test_rank_recipes_invalid_inputs_raise) ... ok
+test_rank_recipes_returns_expected_top_order (__main__.TestVectorSearch.test_rank_recipes_returns_expected_top_order) ... 
+Top 20 ranking for chicken-query: chicken; garlic
+  rank=1 recipe_id=1 title=Chicken Plate sim=1.0000
+  rank=2 recipe_id=6 title=Recipe 6 (chicken-family) sim=0.9882
+  rank=3 recipe_id=9 title=Recipe 9 (chicken-family) sim=0.9844
+  rank=4 recipe_id=12 title=Recipe 12 (chicken-family) sim=0.9796
+  rank=5 recipe_id=15 title=Recipe 15 (chicken-family) sim=0.9738
+  rank=6 recipe_id=18 title=Recipe 18 (chicken-family) sim=0.9669
+  rank=7 recipe_id=21 title=Recipe 21 (chicken-family) sim=0.9586
+  rank=8 recipe_id=24 title=Recipe 24 (chicken-family) sim=0.9487
+  rank=9 recipe_id=27 title=Recipe 27 (chicken-family) sim=0.9369
+  rank=10 recipe_id=30 title=Recipe 30 (chicken-family) sim=0.9231
+  rank=11 recipe_id=33 title=Recipe 33 (chicken-family) sim=0.9068
+  rank=12 recipe_id=34 title=Recipe 34 (tomato-family) sim=0.3393
+  rank=13 recipe_id=31 title=Recipe 31 (tomato-family) sim=0.3109
+  rank=14 recipe_id=28 title=Recipe 28 (tomato-family) sim=0.2845
+  rank=15 recipe_id=25 title=Recipe 25 (tomato-family) sim=0.2600
+  rank=16 recipe_id=22 title=Recipe 22 (tomato-family) sim=0.2372
+  rank=17 recipe_id=19 title=Recipe 19 (tomato-family) sim=0.2159
+  rank=18 recipe_id=16 title=Recipe 16 (tomato-family) sim=0.1961
+  rank=19 recipe_id=13 title=Recipe 13 (tomato-family) sim=0.1776
+  rank=20 recipe_id=10 title=Recipe 10 (tomato-family) sim=0.1604
+  similarity gap (rank1 - rank20): 0.8396
+
+Top 20 ranking for tomato-query: tomato; basil
+  rank=1 recipe_id=22 title=Recipe 22 (tomato-family) sim=1.0000
+  rank=2 recipe_id=25 title=Recipe 25 (tomato-family) sim=0.9998
+  rank=3 recipe_id=19 title=Recipe 19 (tomato-family) sim=0.9996
+  rank=4 recipe_id=28 title=Recipe 28 (tomato-family) sim=0.9991
+  rank=5 recipe_id=16 title=Recipe 16 (tomato-family) sim=0.9989
+  rank=6 recipe_id=13 title=Recipe 13 (tomato-family) sim=0.9978
+  rank=7 recipe_id=31 title=Recipe 31 (tomato-family) sim=0.9975
+  rank=8 recipe_id=10 title=Recipe 10 (tomato-family) sim=0.9965
+  rank=9 recipe_id=7 title=Recipe 7 (tomato-family) sim=0.9950
+  rank=10 recipe_id=34 title=Recipe 34 (tomato-family) sim=0.9949
+  rank=11 recipe_id=4 title=Recipe 4 (tomato-family) sim=0.9933
+  rank=12 recipe_id=2 title=Tomato Plate sim=0.9701
+  rank=13 recipe_id=33 title=Recipe 33 (chicken-family) sim=0.6289
+  rank=14 recipe_id=30 title=Recipe 30 (chicken-family) sim=0.5970
+  rank=15 recipe_id=27 title=Recipe 27 (chicken-family) sim=0.5663
+  rank=16 recipe_id=24 title=Recipe 24 (chicken-family) sim=0.5369
+  rank=17 recipe_id=21 title=Recipe 21 (chicken-family) sim=0.5088
+  rank=18 recipe_id=18 title=Recipe 18 (chicken-family) sim=0.4820
+  rank=19 recipe_id=15 title=Recipe 15 (chicken-family) sim=0.4566
+  rank=20 recipe_id=12 title=Recipe 12 (chicken-family) sim=0.4325
+FAIL
+
+======================================================================
+FAIL: test_rank_recipes_returns_expected_top_order (__main__.TestVectorSearch.test_rank_recipes_returns_expected_top_order)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\yotam\school\csce470\MagniFood\backend\test_vector_search.py", line 181, in test_rank_recipes_returns_expected_top_order
+    self.assertEqual(ranked[0]["recipe_id"], scenario["expected_recipe_id"])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 22 != 2
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.034s
+
+FAILED (failures=1)
+
+Log written to: C:\Users\yotam\school\csce470\MagniFood\backend\test_vector_search_log.txt

@@ -26,9 +26,12 @@ class BM25Search:
         from Main.models import Recipe
         self.records = list(Recipe.objects.values("id", "title", "ingredients", "directions", "link", "source", "tokens"))
         self.corpus = [record["tokens"] for record in self.records]
-        self.bm25 = BM25Okapi(self.corpus)
+        self.bm25 = BM25Okapi(self.corpus) if self.corpus else None
 
     def search_bm25(self, query, k=20):
+        if not self.records or self.bm25 is None:
+            return []
+
         query = normalize_text(query) # normalize
         query_tokens = query.split() # tokenize
         query_scores = self.bm25.get_scores(query_tokens) # process with bm25
