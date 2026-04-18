@@ -4,3 +4,7 @@ pandas
 rank_bm25
 django
 gunicorn
+psycopg2-binary
+dj-database-url
+pgvector
+python-dotenv

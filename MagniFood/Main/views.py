@@ -1,8 +1,26 @@
 import json
 
 from django.shortcuts import render
+from django.db.utils import ProgrammingError, OperationalError
+
+from Main.BM25Search import BM25Search
+from Main.VectorSearch import rank_recipes_by_ingredients
+from Main.rrf import RRF
 
 # Create your views here.
+bm25 = None
+
+
+def get_bm25() -> BM25Search | None:
+    global bm25
+    needs_refresh = bm25 is None or not getattr(bm25, "records", None)
+    if needs_refresh:
+        try:
+            bm25 = BM25Search()
+        except (ProgrammingError, OperationalError):
+            # DB/table may not exist yet during migrations/deploy startup.
+            return None
+    return bm25 if getattr(bm25, "records", None) else None
 
 def home(request):
     submitted_ingredients = []
@@ -27,23 +45,21 @@ def home(request):
         # Use submitted_ingredients as the input list of ingredient strings.
         # Replace this placeholder with the list of recipe dictionaries your
         # search logic returns.
-        recipe_results = [
-            {
-                "name": "Creamy Garlic Chicken Pasta",
-                "image": "https://images.unsplash.com/photo-1521389508051-d7ffb5dc8f93?auto=format&fit=crop&w=900&q=80",
-                "link": "https://example.com/creamy-garlic-chicken-pasta",
-            },
-            {
-                "name": "Herb Roasted Vegetable Bowl",
-                "image": "https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=900&q=80",
-                "link": "https://example.com/herb-roasted-vegetable-bowl",
-            },
-            {
-                "name": "Spicy Tomato Soup",
-                "image": "https://images.unsplash.com/photo-1547592180-6c1b8c1f4b9c?auto=format&fit=crop&w=900&q=80",
-                "link": "https://example.com/spicy-tomato-soup",
-            },
-        ]
+        if submitted_ingredients:
+            query = " ".join(submitted_ingredients)
+
+            bm25_engine = get_bm25()
+            bm25_results = bm25_engine.search_bm25(query, k=20) if bm25_engine else []
+            # vector_results = rank_recipes_by_ingredients(submitted_ingredients, k=20)
+            # recipe_results = RRF(bm25_results, vector_results)
+            recipe_results = [
+                {
+                    "name": r["title"],
+                    "link": "//" + r["link"] if r["link"] and not r["link"].startswith("http") else r["link"],
+                    "image": "",
+                }
+                for r in bm25_results
+            ]
 
     return render(
         request,
