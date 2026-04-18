@@ -1,9 +1,9 @@
 import json
+import os
 from pathlib import Path
 from typing import Any
 
 import numpy as np
-from food2vec.semantic_nutrition import Estimator
 
 
 def _normalize_ingredient_list(ingredients: list[str]) -> str:
@@ -47,9 +47,17 @@ def _cosine_similarity(query_vec: np.ndarray, matrix: np.ndarray) -> np.ndarray:
 	return (matrix @ query_vec) / denom
 
 
+def _embed_query(query_text: str) -> np.ndarray:
+	from food2vec.semantic_nutrition import Estimator
+
+	estimator = Estimator()
+	return np.asarray(estimator.embed(query_text), dtype=float)
+
+
 def rank_recipes_by_ingredients(
 	query_ingredients: list[str],
 	k: int,
+	records: list[dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
 	"""
 	Rank recipes by semantic similarity to user-provided ingredients.
@@ -62,38 +70,70 @@ def rank_recipes_by_ingredients(
 	Returns:
 		Ranked list of recipe dictionaries with similarity score.
 	"""
-	from Main.models import Recipe
-
 	if not query_ingredients:
 		raise ValueError("query_ingredients must contain at least one ingredient string")
 	if k <= 0:
 		raise ValueError("k must be a positive integer")
 	
-	records = list(Recipe.objects.exclude(ner=[]).values("id", "title", "ingredients", "directions", "link", "source", "ner"))
+	if records is None:
+		from Main.models import Recipe
+
+		candidate_limit = int(os.getenv("VECTOR_CANDIDATE_LIMIT", "1000"))
+		records = list(
+			Recipe.objects.exclude(embedding=None).values(
+				"id", "title", "ingredients", "directions", "link", "source", "ner", "embedding"
+			)[:candidate_limit]
+		)
 
 	query_text = _normalize_ingredient_list(query_ingredients)
-	estimator = Estimator()
-	query_embedding = np.asarray(estimator.embed(query_text), dtype=float)
-	
-	embeddings = np.asarray([estimator.embed(_normalize_ingredient_list(r["ner"])) for r in records], dtype=float)
+	query_embedding = _embed_query(query_text)
+
+	embeddings = np.asarray(
+		[
+			np.asarray(rec.get("embedding"), dtype=float)
+			for rec in records
+			if rec.get("embedding") is not None
+		],
+		dtype=float,
+	)
+	filtered_records = [rec for rec in records if rec.get("embedding") is not None]
+	if not filtered_records:
+		return []
+
+	if len(embeddings) != len(filtered_records):
+		# Keep the two lists aligned if a row has a malformed embedding.
+		aligned_records = []
+		aligned_embeddings = []
+		for rec in records:
+			embedding = rec.get("embedding")
+			if embedding is None:
+				continue
+			try:
+				aligned_embeddings.append(np.asarray(embedding, dtype=float))
+				aligned_records.append(rec)
+			except (TypeError, ValueError):
+				continue
+		filtered_records = aligned_records
+		embeddings = np.asarray(aligned_embeddings, dtype=float)
+
 	similarities = _cosine_similarity(query_embedding, embeddings)
 
-	top_k = min(k, len(records))
+	top_k = min(k, len(filtered_records))
 	top_indices = np.argsort(-similarities)[:top_k]
 
 	ranked: list[dict[str, Any]] = []
 	for rank, idx in enumerate(top_indices, start=1):
-		rec = records[int(idx)]
+		rec = filtered_records[int(idx)]
 		ranked.append(
 			{
 				"rank": rank,
 				"similarity": float(similarities[int(idx)]),
-				"recipe_id": rec.get("recipe_id"),
-				"title": rec.get("title"),
-				"ingredient_text": rec.get("ingredient_text"),
-				"directions": rec.get("directions"),
-				"link": rec.get("link"),
-				"source": rec.get("source"),
+				"recipe_id": rec.get("id"),
+				"title": rec.get("title", ""),
+				"ingredient_text": rec.get("ingredients", ""),
+				"directions": rec.get("directions", ""),
+				"link": rec.get("link", ""),
+				"source": rec.get("source", ""),
 			}
 		)
 
