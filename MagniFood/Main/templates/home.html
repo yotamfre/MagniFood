@@ -55,8 +55,7 @@
                     {% endcomment %}
                     {% if recipe_results %}
                         {% for recipe in recipe_results %}
-                            <div class="recipe-card">
-                                <img src="{{ recipe.image }}" alt="{{ recipe.name }}">
+                            <div class="recipe-card">                                
                                 <div class="recipe-meta">
                                     <h3>{{ recipe.name }}</h3>
                                     <a href="{{ recipe.link }}" target="_blank" rel="noopener noreferrer">Open Full Recipe</a>                                    
@@ -75,7 +74,7 @@
                     {% else %}
                         <p class="empty-state">Submit ingredients to reveal this scrollable results panel. Your query output will be shown in this view.</p>
                     {% endif %}
-                                </div>
+                </div>
             </article>
         </section>
         {% endif %}
