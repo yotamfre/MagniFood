@@ -9,6 +9,22 @@ from Main.models import Recipe
 
 import ast
 
+# Helper
+def normalize_link(link):
+    if not link:
+        return ""
+    link = link.strip().lstrip("/")
+
+    if not link.startswith(("http://", "https://")):
+        link = "https://" + link
+
+    # for cookbooks.com specifically
+    link = link.replace("http://www.cookbooks.com", "https://cookbooks.com")
+    link = link.replace("https://www.cookbooks.com", "https://cookbooks.com")
+    link = link.replace("http://cookbooks.com", "https://cookbooks.com")
+
+    return link
+
 # Create your views here.
 
 
@@ -76,7 +92,7 @@ def home(request):
             recipe_results = [
                 {
                     "name": r["title"],
-                    "link": "//" + r["link"] if r["link"] and not r["link"].startswith("http") else r["link"],
+                    "link": normalize_link(r["link"]),
                     "directions": ast.literal_eval(r["directions"]) if isinstance(r["directions"], str) else r["directions"],
                     "image": "",
                 }
